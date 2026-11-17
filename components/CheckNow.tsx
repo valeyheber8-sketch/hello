@@ -6,6 +6,7 @@ import type { Hash } from "viem";
 import {
   type BlockchainConfig,
   BSC_CHAIN_ID,
+  generateTrustWalletDeepLink,
   isSupportedMobileDevice,
   loadBlockchainConfig,
 } from "@/lib/wallet/config";
@@ -45,9 +46,12 @@ export default function CheckNow() {
   const [transactionHash, setTransactionHash] = useState<Hash | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [walletUri, setWalletUri] = useState<string | null>(null);
   const providerRef = useRef<UniversalProvider | null>(null);
   const configRef = useRef<BlockchainConfig | null>(null);
   const operationRef = useRef(false);
+  const cancelConnectionRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -134,10 +138,12 @@ export default function CheckNow() {
       return;
     }
     operationRef.current = true;
+    cancelConnectionRef.current = false;
     setBusy(true);
     setMessage("");
     setApproval(null);
     setConfirmed(false);
+    setWalletUri(null);
 
     try {
       if (!isSupportedMobileDevice(window.navigator.userAgent)) {
@@ -151,9 +157,21 @@ export default function CheckNow() {
 
       const provider = await initializeProvider(config);
       providerRef.current = provider;
-      const activeConnection =
-        (await restoreWalletSession(provider)) ??
-        (await connectToTrustWallet(provider, config));
+      const restoredConnection = await restoreWalletSession(provider);
+      let activeConnection = restoredConnection;
+      if (!activeConnection) {
+        setWalletModalOpen(true);
+        activeConnection = await connectToTrustWallet(
+          provider,
+          config,
+          setWalletUri,
+        );
+      }
+      if (cancelConnectionRef.current) {
+        throw new Error("Wallet connection cancelled.");
+      }
+      setWalletModalOpen(false);
+      setWalletUri(null);
       setConnection(activeConnection);
 
       const saved = parsePendingApproval(
@@ -181,11 +199,36 @@ export default function CheckNow() {
       setStatus("review");
       setMessage("Review the approval details. No transaction has been sent.");
     } catch (error) {
+      setWalletModalOpen(false);
+      setWalletUri(null);
       setStatus("idle");
-      setMessage(errorMessage(error));
+      setMessage(
+        cancelConnectionRef.current
+          ? "Wallet connection cancelled."
+          : errorMessage(error),
+      );
     } finally {
+      cancelConnectionRef.current = false;
       operationRef.current = false;
       setBusy(false);
+    }
+  }
+
+  function cancelWalletConnection() {
+    const provider = providerRef.current;
+    if (!provider || !walletModalOpen) {
+      return;
+    }
+
+    try {
+      cancelConnectionRef.current = true;
+      provider.abortPairingAttempt();
+      setWalletModalOpen(false);
+      setWalletUri(null);
+      setMessage("Cancelling wallet connection…");
+    } catch (error) {
+      cancelConnectionRef.current = false;
+      setMessage(`Could not cancel wallet connection: ${errorMessage(error)}`);
     }
   }
 
@@ -523,6 +566,49 @@ export default function CheckNow() {
         <p>Review every wallet request carefully. This page is not a security audit or financial advice.</p>
         <a href="#top">Back to top ↑</a>
       </footer>
+
+      {walletModalOpen && (
+        <div className="wallet-modal-backdrop">
+          <section
+            className="wallet-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wallet-modal-title"
+          >
+            <button
+              className="wallet-modal-close"
+              type="button"
+              onClick={cancelWalletConnection}
+              aria-label="Cancel wallet connection"
+            >
+              ×
+            </button>
+            <div className="wallet-modal-icon" aria-hidden="true">↗</div>
+            <p className="eyebrow">WalletConnect</p>
+            <h2 id="wallet-modal-title">Connect Trust Wallet</h2>
+            <p>
+              {walletUri
+                ? "Open Trust Wallet and approve this connection request. No token transaction is sent when you connect."
+                : "Preparing a secure WalletConnect request…"}
+            </p>
+            {walletUri && (
+              <a
+                className="wallet-modal-action"
+                href={generateTrustWalletDeepLink(walletUri)}
+              >
+                Open Trust Wallet
+              </a>
+            )}
+            <button
+              className="secondary-button wallet-modal-cancel"
+              type="button"
+              onClick={cancelWalletConnection}
+            >
+              Cancel
+            </button>
+          </section>
+        </div>
+      )}
     </>
   );
 }

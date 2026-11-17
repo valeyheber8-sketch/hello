@@ -94,11 +94,17 @@ export async function initializeTrustWalletConnection(
 export async function connectToTrustWallet(
   provider: UniversalProvider,
   config: BlockchainConfig,
+  onDisplayUri?: (uri: string) => void,
 ): Promise<WalletConnection> {
   let deepLinkError: Error | undefined;
   const uriHandler = (uri: string) => {
     try {
-      handleDisplayUri(uri);
+      if (onDisplayUri) {
+        generateTrustWalletDeepLink(uri);
+        onDisplayUri(uri);
+      } else {
+        handleDisplayUri(uri);
+      }
     } catch (error) {
       deepLinkError = new Error(`Could not open Trust Wallet: ${errorMessage(error)}`);
       provider.abortPairingAttempt();
