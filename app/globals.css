@@ -1,0 +1,102 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #fff;
+}
+
+main {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.check-panel {
+  width: min(100%, 560px);
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+
+button {
+  border: 0;
+  border-radius: 6px;
+  padding: 12px 24px;
+  background: #111;
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+button:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 3px;
+}
+
+.status-message,
+.wallet-address,
+.transaction-hash {
+  max-width: 100%;
+  margin: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.approval-details {
+  width: 100%;
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  color: #111;
+}
+
+.approval-details h1,
+.approval-details p {
+  margin: 0;
+  font-size: 16px;
+}
+
+.approval-details dl {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr);
+  gap: 8px 12px;
+  margin: 0;
+}
+
+.approval-details dt {
+  font-weight: 600;
+}
+
+.approval-details dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.confirmation input {
+  margin-top: 4px;
+}
+
+.secondary-button {
+  background: #555;
+}

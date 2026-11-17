@@ -1,0 +1,25 @@
+{
+  "name": "check-now-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "tsx --test lib/wallet/*.test.ts"
+  },
+  "dependencies": {
+    "@walletconnect/universal-provider": "^2.26.0",
+    "next": "^16.4.6",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "viem": "^2.58.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.7",
+    "tsx": "^4.23.15",
+    "typescript": "^5.8.3"
+  }
+}
