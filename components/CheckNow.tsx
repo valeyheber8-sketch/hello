@@ -6,7 +6,7 @@ import type { Hash } from "viem";
 import {
   type BlockchainConfig,
   BSC_CHAIN_ID,
-  generateTrustWalletDeepLink,
+  generateTrustWalletLaunchUrl,
   isSupportedMobileDevice,
   loadBlockchainConfig,
 } from "@/lib/wallet/config";
@@ -47,9 +47,10 @@ export default function CheckNow() {
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
-  const [walletUri, setWalletUri] = useState<string | null>(null);
+  const [walletLaunchUrl, setWalletLaunchUrl] = useState<string | null>(null);
   const providerRef = useRef<UniversalProvider | null>(null);
   const configRef = useRef<BlockchainConfig | null>(null);
+  const walletLaunchWindowRef = useRef<Window | null>(null);
   const operationRef = useRef(false);
   const cancelConnectionRef = useRef(false);
 
@@ -133,6 +134,14 @@ export default function CheckNow() {
     };
   }, [connection]);
 
+  function closeWalletLaunchWindow() {
+    const launchWindow = walletLaunchWindowRef.current;
+    walletLaunchWindowRef.current = null;
+    if (launchWindow && !launchWindow.closed) {
+      launchWindow.close();
+    }
+  }
+
   async function checkNow() {
     if (operationRef.current) {
       return;
@@ -143,10 +152,11 @@ export default function CheckNow() {
     setMessage("");
     setApproval(null);
     setConfirmed(false);
-    setWalletUri(null);
+    setWalletLaunchUrl(null);
 
     try {
-      if (!isSupportedMobileDevice(window.navigator.userAgent)) {
+      const userAgent = window.navigator.userAgent;
+      if (!isSupportedMobileDevice(userAgent)) {
         throw new Error("Trust Wallet connection is supported on mobile devices only.");
       }
 
@@ -154,6 +164,10 @@ export default function CheckNow() {
       configRef.current = config;
       setStatus("connecting");
       setMessage("Connecting to Trust Wallet on BNB Smart Chain…");
+
+      if (!providerRef.current?.session) {
+        walletLaunchWindowRef.current = window.open("about:blank", "_blank");
+      }
 
       const provider = await initializeProvider(config);
       providerRef.current = provider;
@@ -164,14 +178,29 @@ export default function CheckNow() {
         activeConnection = await connectToTrustWallet(
           provider,
           config,
-          setWalletUri,
+          (uri) => {
+            const launchUrl = generateTrustWalletLaunchUrl(uri, userAgent);
+            setWalletLaunchUrl(launchUrl);
+            const launchWindow = walletLaunchWindowRef.current;
+            if (launchWindow && !launchWindow.closed) {
+              try {
+                launchWindow.location.replace(launchUrl);
+              } catch (error) {
+                closeWalletLaunchWindow();
+                setMessage(
+                  `Automatic wallet launch failed. Use the Open Trust Wallet link to continue. ${errorMessage(error)}`,
+                );
+              }
+            }
+          },
         );
       }
       if (cancelConnectionRef.current) {
         throw new Error("Wallet connection cancelled.");
       }
+      closeWalletLaunchWindow();
       setWalletModalOpen(false);
-      setWalletUri(null);
+      setWalletLaunchUrl(null);
       setConnection(activeConnection);
 
       const saved = parsePendingApproval(
@@ -199,8 +228,9 @@ export default function CheckNow() {
       setStatus("review");
       setMessage("Review the approval details. No transaction has been sent.");
     } catch (error) {
+      closeWalletLaunchWindow();
       setWalletModalOpen(false);
-      setWalletUri(null);
+      setWalletLaunchUrl(null);
       setStatus("idle");
       setMessage(
         cancelConnectionRef.current
@@ -223,8 +253,9 @@ export default function CheckNow() {
     try {
       cancelConnectionRef.current = true;
       provider.abortPairingAttempt();
+      closeWalletLaunchWindow();
       setWalletModalOpen(false);
-      setWalletUri(null);
+      setWalletLaunchUrl(null);
       setMessage("Cancelling wallet connection…");
     } catch (error) {
       cancelConnectionRef.current = false;
@@ -587,14 +618,14 @@ export default function CheckNow() {
             <p className="eyebrow">WalletConnect</p>
             <h2 id="wallet-modal-title">Connect Trust Wallet</h2>
             <p>
-              {walletUri
-                ? "Open Trust Wallet and approve this connection request. No token transaction is sent when you connect."
+              {walletLaunchUrl
+                ? "Trust Wallet should open. If it did not, use the button below to open it and approve this connection request. No token transaction is sent when you connect."
                 : "Preparing a secure WalletConnect request…"}
             </p>
-            {walletUri && (
+            {walletLaunchUrl && (
               <a
                 className="wallet-modal-action"
-                href={generateTrustWalletDeepLink(walletUri)}
+                href={walletLaunchUrl}
               >
                 Open Trust Wallet
               </a>

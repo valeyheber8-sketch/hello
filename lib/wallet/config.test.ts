@@ -4,6 +4,7 @@ import {
   calculateApprovalAmount,
   extractWalletAddress,
   generateTrustWalletDeepLink,
+  generateTrustWalletLaunchUrl,
   isSupportedMobileDevice,
 } from "./config";
 import { parsePendingApproval } from "./pending";
@@ -28,6 +29,28 @@ test("preserves the complete WalletConnect URI in the Trust Wallet deep link", (
 
 test("rejects malformed WalletConnect URIs", () => {
   assert.throws(() => generateTrustWalletDeepLink("https://example.test"), /invalid/);
+});
+
+test("uses a Trust Wallet Android intent with an app-store fallback", () => {
+  const uri = "wc:topic@2?relay-protocol=irn&symKey=abc%2Fdef";
+  const launchUrl = generateTrustWalletLaunchUrl(
+    uri,
+    "Mozilla/5.0 (Linux; Android 14) Chrome/120.0.0.0 Mobile",
+  );
+
+  assert.match(launchUrl, /^intent:\/\/wc\?uri=wc%3Atopic%402/);
+  assert.match(launchUrl, /scheme=trust;package=com\.wallet\.crypto\.trustapp/);
+  assert.match(launchUrl, /S\.browser_fallback_url=https%3A%2F%2Fplay\.google\.com/);
+});
+
+test("uses the Trust Wallet URI scheme on iOS", () => {
+  assert.equal(
+    generateTrustWalletLaunchUrl(
+      "wc:topic@2?relay-protocol=irn&symKey=abc",
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)",
+    ),
+    "trust://wc?uri=wc%3Atopic%402%3Frelay-protocol%3Dirn%26symKey%3Dabc",
+  );
 });
 
 test("extracts only a valid BNB Chain account", () => {

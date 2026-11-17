@@ -109,6 +109,20 @@ export function generateTrustWalletDeepLink(uri: string): string {
   return `trust://wc?uri=${encodeURIComponent(uri)}`;
 }
 
+export function generateTrustWalletLaunchUrl(
+  uri: string,
+  userAgent: string,
+): string {
+  const deepLink = generateTrustWalletDeepLink(uri);
+  if (!/android/i.test(userAgent)) {
+    return deepLink;
+  }
+
+  const playStoreUrl =
+    "https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp";
+  return `intent://wc?uri=${encodeURIComponent(uri)}#Intent;scheme=trust;package=com.wallet.crypto.trustapp;S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};end`;
+}
+
 export function isSupportedMobileDevice(userAgent: string): boolean {
   return /android|iphone|ipad|ipod/i.test(userAgent);
 }
