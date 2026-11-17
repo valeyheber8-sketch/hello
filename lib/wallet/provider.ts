@@ -80,7 +80,9 @@ export async function initializeTrustWalletConnection(
   }
 
   try {
-    const session = await provider.connect({ namespaces: configureChains(config) });
+    const session = await provider.connect({
+      optionalNamespaces: configureChains(config),
+    });
     if (!session) {
       throw new Error("Trust Wallet did not establish a WalletConnect session.");
     }
