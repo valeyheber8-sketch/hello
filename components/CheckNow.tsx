@@ -255,9 +255,7 @@ export default function CheckNow() {
     );
     window.sessionStorage.removeItem(pendingApprovalStorageKey);
     setStatus("success");
-    setMessage(
-      "The 1 USDT approval was confirmed. Certificate generation is unavailable because its original implementation was not present in the workspace.",
-    );
+    setMessage("The 1 USDT approval was confirmed on BNB Smart Chain.");
   }
 
   async function recheckTransaction() {
@@ -304,99 +302,227 @@ export default function CheckNow() {
   }
 
   return (
-    <main>
-      <section className="check-panel" aria-live="polite">
-        <button
-          id="check-now"
-          type="button"
-          onClick={checkNow}
-          disabled={busy || status === "success"}
-        >
-          {busy && status === "connecting" ? "Connecting…" : "Check Now"}
-        </button>
+    <>
+      <header className="site-header">
+        <a className="brand" href="#top" aria-label="Check Now home">
+          <span className="brand-mark" aria-hidden="true">C</span>
+          <span>Check Now<small>BNB Smart Chain</small></span>
+        </a>
+        <nav className="site-nav" aria-label="Main navigation">
+          <a href="#check">Check Now</a>
+          <a href="#about">About</a>
+          <a href="#process">How it works</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <a className="header-link" href="#check">Open check</a>
+      </header>
 
-        {message && (
-          <p className="status-message" role="status">
-            {message}
-          </p>
-        )}
-
-        {connection && (
-          <p className="wallet-address">
-            Connected account: <code>{connection.address}</code>
-          </p>
-        )}
-
-        {approval && configRef.current && (
-          <div className="approval-details">
-            <h1>Review token approval</h1>
-            <dl>
-              <dt>Network</dt>
-              <dd>BNB Smart Chain (56)</dd>
-              <dt>Token</dt>
-              <dd>{approval.tokenName} ({approval.tokenSymbol})</dd>
-              <dt>Token contract</dt>
-              <dd>
-                <code>{configRef.current.tokenAddress}</code>
-              </dd>
-              <dt>Spender</dt>
-              <dd>
-                <code>{configRef.current.spenderAddress}</code>
-              </dd>
-              <dt>Approval amount</dt>
-              <dd>Exactly {formatTokenAmount(approval.amount, approval.decimals)} {approval.tokenSymbol}</dd>
-              <dt>Current balance</dt>
-              <dd>{formatTokenAmount(approval.balance, approval.decimals)} {approval.tokenSymbol}</dd>
-              <dt>Current allowance</dt>
-              <dd>{formatTokenAmount(approval.allowance, approval.decimals)} {approval.tokenSymbol}</dd>
-            </dl>
-            <p>
-              This grants the spender permission to use up to the displayed amount
-              of this token. It is not an unlimited approval.
+      <main id="top">
+        <section className="hero-section">
+          <div className="hero-copy">
+            <p className="eyebrow"><span aria-hidden="true">●</span> BNB Smart Chain · USDT</p>
+            <h1>Review your USDT approval before you sign.</h1>
+            <p className="hero-description">
+              Connect Trust Wallet to inspect your BNB Chain USDT balance and
+              allowance. If you choose to continue, the requested approval is
+              limited to exactly 1 USDT.
             </p>
-            {status !== "success" && (
-              <>
-                <label className="confirmation">
-                  <input
-                    type="checkbox"
-                    checked={confirmed}
-                    onChange={(event) => setConfirmed(event.target.checked)}
-                    disabled={busy}
-                  />
-                  I have reviewed these details and want to request this approval.
-                </label>
-                <button
-                  type="button"
-                  onClick={approve}
-                  disabled={!confirmed || busy || Boolean(transactionHash)}
-                >
-                  Approve exactly 1 USDT in Trust Wallet
-                </button>
-              </>
-            )}
+            <ul className="hero-points">
+              <li><span aria-hidden="true">✓</span> Connection does not submit a transaction</li>
+              <li><span aria-hidden="true">✓</span> Spender and amount shown before approval</li>
+              <li><span aria-hidden="true">✓</span> Approval requires separate confirmation</li>
+            </ul>
+            <a className="hero-link" href="#check">Continue to Check Now <span aria-hidden="true">↓</span></a>
           </div>
-        )}
+          <aside className="hero-note">
+            <div className="note-icon" aria-hidden="true">i</div>
+            <h2>This is an approval flow, not a security scan.</h2>
+            <p>
+              It does not assess whether a wallet is safe or issue a security
+              certificate. Review the token and spender addresses carefully.
+            </p>
+            <div className="network-chip"><span aria-hidden="true">●</span> BNB Smart Chain · 56</div>
+          </aside>
+        </section>
 
-        {transactionHash && (
-          <p className="transaction-hash">
-            Transaction: <code>{transactionHash}</code>
+        <section className="feature-strip" aria-label="Approval flow safeguards">
+          <article>
+            <span className="feature-number">01</span>
+            <div><h2>Read first</h2><p>Review the account, balance, and current allowance.</p></div>
+          </article>
+          <article>
+            <span className="feature-number">02</span>
+            <div><h2>Fixed amount</h2><p>The requested approval is exactly 1 USDT, never unlimited.</p></div>
+          </article>
+          <article>
+            <span className="feature-number">03</span>
+            <div><h2>You decide</h2><p>No transaction is sent until you confirm and authorize it.</p></div>
+          </article>
+        </section>
+
+        <section id="check" className="check-section">
+          <div className="section-heading">
+            <p className="eyebrow">Wallet check</p>
+            <h2>Connect and review</h2>
+            <p>Use Trust Wallet on a mobile device. You can disconnect at any time.</p>
+          </div>
+          <section className="check-panel" aria-live="polite">
+            <button
+              id="check-now"
+              type="button"
+              onClick={checkNow}
+              disabled={busy || status === "success"}
+            >
+              {busy && status === "connecting" ? "Connecting…" : "Check Now"}
+            </button>
+
+            {message && (
+              <p className="status-message" role="status">
+                {message}
+              </p>
+            )}
+
+            {connection && (
+              <p className="wallet-address">
+                Connected account: <code>{connection.address}</code>
+              </p>
+            )}
+
+            {approval && configRef.current && (
+              <div className="approval-details">
+                <h2>Review token approval</h2>
+                <dl>
+                  <dt>Network</dt>
+                  <dd>BNB Smart Chain (56)</dd>
+                  <dt>Token</dt>
+                  <dd>{approval.tokenName} ({approval.tokenSymbol})</dd>
+                  <dt>Token contract</dt>
+                  <dd>
+                    <code>{configRef.current.tokenAddress}</code>
+                  </dd>
+                  <dt>Spender</dt>
+                  <dd>
+                    <code>{configRef.current.spenderAddress}</code>
+                  </dd>
+                  <dt>Approval amount</dt>
+                  <dd>Exactly {formatTokenAmount(approval.amount, approval.decimals)} {approval.tokenSymbol}</dd>
+                  <dt>Current balance</dt>
+                  <dd>{formatTokenAmount(approval.balance, approval.decimals)} {approval.tokenSymbol}</dd>
+                  <dt>Current allowance</dt>
+                  <dd>{formatTokenAmount(approval.allowance, approval.decimals)} {approval.tokenSymbol}</dd>
+                </dl>
+                <p className="approval-warning">
+                  Approval lets the named spender use up to this amount of your
+                  USDT. It does not transfer tokens now, but it grants on-chain
+                  permission. Only proceed if you trust the displayed spender.
+                </p>
+                {status !== "success" && (
+                  <>
+                    <label className="confirmation">
+                      <input
+                        type="checkbox"
+                        checked={confirmed}
+                        onChange={(event) => setConfirmed(event.target.checked)}
+                        disabled={busy}
+                      />
+                      I reviewed the token, spender, and exact 1 USDT amount.
+                    </label>
+                    <button
+                      type="button"
+                      onClick={approve}
+                      disabled={!confirmed || busy || Boolean(transactionHash)}
+                    >
+                      Approve exactly 1 USDT in Trust Wallet
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {transactionHash && (
+              <p className="transaction-hash">
+                Transaction: <code>{transactionHash}</code>
+              </p>
+            )}
+            {transactionHash && status !== "success" && (
+              <button
+                type="button"
+                onClick={recheckTransaction}
+                disabled={busy || !connection || !approval}
+              >
+                Check transaction status
+              </button>
+            )}
+            {connection && (
+              <button className="secondary-button" type="button" onClick={disconnect} disabled={busy}>
+                Disconnect wallet
+              </button>
+            )}
+          </section>
+        </section>
+
+        <section id="about" className="info-section">
+          <div className="section-heading">
+            <p className="eyebrow">What this page does</p>
+            <h2>A clear, limited wallet interaction</h2>
+          </div>
+          <p className="info-copy">
+            This page connects to your wallet through WalletConnect and reads
+            public BNB Chain contract data using the configured RPC endpoint.
+            It displays the token contract, spender, token balance, and current
+            allowance so you can review them before deciding whether to request
+            an approval. It does not provide scam detection, risk scoring, or
+            a guarantee about wallet security.
           </p>
-        )}
-        {transactionHash && status !== "success" && (
-          <button
-            type="button"
-            onClick={recheckTransaction}
-            disabled={busy || !connection || !approval}
-          >
-            Check transaction status
-          </button>
-        )}
-        {connection && (
-          <button className="secondary-button" type="button" onClick={disconnect} disabled={busy}>
-            Disconnect wallet
-          </button>
-        )}
-      </section>
-    </main>
+        </section>
+
+        <section id="process" className="process-section">
+          <div className="section-heading">
+            <p className="eyebrow">How it works</p>
+            <h2>Four steps, with your confirmation</h2>
+          </div>
+          <ol className="steps-list">
+            <li><span>01</span><div><h3>Connect</h3><p>Start a WalletConnect session with Trust Wallet on BNB Smart Chain.</p></div></li>
+            <li><span>02</span><div><h3>Review</h3><p>Check the configured token and spender, plus your balance and existing allowance.</p></div></li>
+            <li><span>03</span><div><h3>Choose</h3><p>Only after you check the confirmation box can the wallet be asked to approve exactly 1 USDT.</p></div></li>
+            <li><span>04</span><div><h3>Verify</h3><p>If you authorize the transaction, its BNB Chain receipt and transaction fields are checked.</p></div></li>
+          </ol>
+        </section>
+
+        <section id="faq" className="faq-section">
+          <div className="section-heading">
+            <p className="eyebrow">FAQ</p>
+            <h2>Questions before connecting?</h2>
+          </div>
+          <div className="faq-list">
+            <details>
+              <summary>Does connecting my wallet send a transaction?</summary>
+              <p>No. Connecting reads your account and network and fetches public token details. A transaction is requested only after a separate confirmation and your approval in Trust Wallet.</p>
+            </details>
+            <details>
+              <summary>What does the approval allow?</summary>
+              <p>It allows the displayed spender to use up to exactly 1 USDT from the connected account. An approval is not a token transfer, but it is an on-chain permission. Verify the spender before signing.</p>
+            </details>
+            <details>
+              <summary>Does this check whether my wallet is safe?</summary>
+              <p>No. It reads token information and allowance only. It does not analyze wallet risk, detect scams, or issue a security certificate.</p>
+            </details>
+            <details>
+              <summary>Will I ever be asked for my recovery phrase?</summary>
+              <p>No. Never share your recovery phrase or private key with a website, support agent, or wallet connection.</p>
+            </details>
+          </div>
+        </section>
+      </main>
+
+      <footer className="site-footer">
+        <a className="brand" href="#top">
+          <span className="brand-mark" aria-hidden="true">C</span>
+          <span>Check Now<small>BNB Smart Chain</small></span>
+        </a>
+        <p>Review every wallet request carefully. This page is not a security audit or financial advice.</p>
+        <a href="#top">Back to top ↑</a>
+      </footer>
+    </>
   );
 }
